@@ -22,7 +22,22 @@ export interface AgentConfiguration {
 export class ProviderRegistry {
   private providers = new Map<string, AgentProvider>();
   private agentConfigs = new Map<string, AgentConfiguration>();
-  
+  private initialized = false;
+
+  /**
+   * Check if registry has been initialized
+   */
+  isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
+   * Mark registry as initialized
+   */
+  markAsInitialized(): void {
+    this.initialized = true;
+  }
+
   /**
    * Register a provider instance
    */
