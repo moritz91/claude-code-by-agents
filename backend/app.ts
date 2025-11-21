@@ -567,30 +567,61 @@ export function createApp(
   });
 
   // Static file serving with SPA fallback
-  // Serve static assets (CSS, JS, images, etc.)
-  const serveStatic = runtime.createStaticFileMiddleware({
-    root: config.staticPath,
-  });
-  app.use("/assets/*", serveStatic);
-
-  // SPA fallback - serve index.html for all unmatched routes (except API routes)
-  app.get("*", async (c) => {
-    const path = c.req.path;
-
-    // Skip API routes
-    if (path.startsWith("/api/")) {
-      return c.text("Not found", 404);
-    }
-
+  // Only serve frontend if staticPath exists (not needed for Render deployment)
+  if (runtime && config.staticPath) {
     try {
-      const indexPath = `${config.staticPath}/index.html`;
-      const indexFile = await runtime.readBinaryFile(indexPath);
-      return c.html(new TextDecoder().decode(indexFile));
+      const serveStatic = runtime.createStaticFileMiddleware({
+        root: config.staticPath,
+      });
+      app.use("/assets/*", serveStatic);
+
+      // SPA fallback - serve index.html for all unmatched routes (except API routes)
+      app.get("*", async (c) => {
+        const path = c.req.path;
+
+        // Skip API routes
+        if (path.startsWith("/api/")) {
+          return c.text("Not found", 404);
+        }
+
+        try {
+          const indexPath = `${config.staticPath}/index.html`;
+          const indexFile = await runtime.readBinaryFile(indexPath);
+          return c.html(new TextDecoder().decode(indexFile));
+        } catch (error) {
+          // Frontend not available - return helpful message
+          return c.json({
+            message: "Agentrooms API",
+            status: "running",
+            frontend: "Deployed separately on Cloudflare Pages",
+            apiDocs: "/api-docs",
+            health: "/api/health"
+          });
+        }
+      });
     } catch (error) {
-      console.error("Error serving index.html:", error);
-      return c.text("Internal server error", 500);
+      console.warn("Static file serving not available:", error);
     }
-  });
+  } else {
+    // No frontend - API-only mode (Render deployment)
+    app.get("*", async (c) => {
+      const path = c.req.path;
+
+      // Skip API routes
+      if (path.startsWith("/api/")) {
+        return c.text("Not found", 404);
+      }
+
+      // Return helpful message for root path
+      return c.json({
+        message: "Agentrooms API",
+        status: "running",
+        frontend: "Deployed separately on Cloudflare Pages",
+        apiDocs: "/api-docs",
+        health: "/api/health"
+      });
+    });
+  }
 
   return app;
 }
