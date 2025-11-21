@@ -52,12 +52,7 @@
     "format:check": "prettier --check \"**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "prepack": "node scripts/prepack.js",
-    "prepublishOnly": "npm run build && npm run test",
-    "workers:dev": "wrangler dev backend/worker.ts",
-    "workers:deploy": "wrangler deploy",
-    "workers:deploy:staging": "wrangler deploy --env staging",
-    "workers:deploy:production": "wrangler deploy --env production",
-    "workers:tail": "wrangler tail"
+    "prepublishOnly": "npm run build && npm run test"
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "1.0.51",
@@ -74,7 +69,6 @@
     "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20251120.0",
     "@types/node": "^20.0.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.6",
@@ -86,8 +80,7 @@
     "rimraf": "^6.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^2.0.0",
-    "wrangler": "^3.114.15"
+    "vitest": "^2.0.0"
   },
   "peerDependencies": {
     "@anthropic-ai/claude-code": "1.0.51"
