@@ -31,7 +31,7 @@ function shouldUseOrchestrator(message: string, availableAgents?: Array<{id: str
   // ONLY for multiple agent mentions - not for single agent or no mentions
   if (availableAgents && availableAgents.length > 0) {
     const mentionMatches = message.match(/@(\w+(?:-\w+)*)/g);
-    const result = mentionMatches && mentionMatches.length > 1;
+    const result = !!(mentionMatches && mentionMatches.length > 1);
     console.debug(`[DEBUG] shouldUseOrchestrator result:`, {
       mentionMatches,
       mentionCount: mentionMatches?.length || 0,
@@ -39,7 +39,7 @@ function shouldUseOrchestrator(message: string, availableAgents?: Array<{id: str
     });
     return result;
   }
-  
+
   console.debug(`[DEBUG] No available agents or empty array`);
   return false;
 }
@@ -712,13 +712,20 @@ export async function handleChatRequest(
         // Check if this should use orchestrator mode
         let executionMethod;
 
-        const useOrchestrator = shouldUseOrchestrator(chatRequest.message, chatRequest.availableAgents);
+        let useOrchestrator;
+        try {
+          useOrchestrator = shouldUseOrchestrator(chatRequest.message, chatRequest.availableAgents);
 
-        if (debugMode) {
-          console.log(`[DEBUG] ========== ROUTING DECISION ==========`);
-          console.log(`[DEBUG] useOrchestrator result: ${useOrchestrator}`);
-          console.log(`[DEBUG] message: ${chatRequest.message}`);
-          console.log(`[DEBUG] availableAgents: ${JSON.stringify(chatRequest.availableAgents?.map(a => a.id))}`);
+          if (debugMode) {
+            console.log(`[DEBUG] ========== ROUTING DECISION ==========`);
+            console.log(`[DEBUG] useOrchestrator result: ${useOrchestrator}`);
+            console.log(`[DEBUG] useOrchestrator type: ${typeof useOrchestrator}`);
+            console.log(`[DEBUG] message: ${chatRequest.message}`);
+            console.log(`[DEBUG] availableAgents: ${JSON.stringify(chatRequest.availableAgents?.map(a => a.id))}`);
+          }
+        } catch (err) {
+          console.error(`[ERROR] shouldUseOrchestrator threw exception:`, err);
+          useOrchestrator = false;
         }
 
         if (useOrchestrator) {
