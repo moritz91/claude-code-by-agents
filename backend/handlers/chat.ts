@@ -479,6 +479,14 @@ async function* executeClaudeCommand(
   claudeAuth?: ChatRequest['claudeAuth'],
   debugMode?: boolean,
 ): AsyncGenerator<StreamResponse> {
+  if (debugMode) {
+    console.log(`[DEBUG] ========== executeClaudeCommand CALLED ==========`);
+    console.log(`[DEBUG] message: ${message.substring(0, 50)}`);
+    console.log(`[DEBUG] claudePath: ${claudePath}`);
+    console.log(`[DEBUG] workingDirectory: ${workingDirectory}`);
+    console.log(`[DEBUG] sessionId: ${sessionId}`);
+  }
+
   let abortController: AbortController;
 
   try {
@@ -753,6 +761,11 @@ export async function handleChatRequest(
           }
         } else {
           // Not orchestrator - use local Claude execution
+          if (debugMode) {
+            console.log(`[DEBUG] Using local Claude execution path`);
+            console.log(`[DEBUG] claudePath from config: ${claudePath}`);
+          }
+
           executionMethod = executeClaudeCommand(
             chatRequest.message,
             chatRequest.requestId,
