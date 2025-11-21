@@ -716,13 +716,12 @@ export async function handleChatRequest(
         try {
           useOrchestrator = shouldUseOrchestrator(chatRequest.message, chatRequest.availableAgents);
 
-          if (debugMode) {
-            console.log(`[DEBUG] ========== ROUTING DECISION ==========`);
-            console.log(`[DEBUG] useOrchestrator result: ${useOrchestrator}`);
-            console.log(`[DEBUG] useOrchestrator type: ${typeof useOrchestrator}`);
-            console.log(`[DEBUG] message: ${chatRequest.message}`);
-            console.log(`[DEBUG] availableAgents: ${JSON.stringify(chatRequest.availableAgents?.map(a => a.id))}`);
-          }
+          // Use console.error to ensure these logs appear
+          console.error(`[DEBUG-FORCE] ========== ROUTING DECISION ==========`);
+          console.error(`[DEBUG-FORCE] useOrchestrator result: ${useOrchestrator}`);
+          console.error(`[DEBUG-FORCE] useOrchestrator type: ${typeof useOrchestrator}`);
+          console.error(`[DEBUG-FORCE] debugMode: ${debugMode}`);
+          console.error(`[DEBUG-FORCE] message: ${chatRequest.message}`);
         } catch (err) {
           console.error(`[ERROR] shouldUseOrchestrator threw exception:`, err);
           useOrchestrator = false;
