@@ -117,6 +117,126 @@ export function createApp(
     });
   });
 
+  // Debug endpoint to test node spawning
+  app.get("/api/debug/node", async (c) => {
+    const { spawn } = await import("node:child_process");
+    const results: any = {
+      processExecPath: process.execPath,
+      processVersion: process.version,
+      processEnvPath: process.env.PATH,
+      spawnTests: []
+    };
+
+    // Test 1: Spawn with "node" string
+    try {
+      await new Promise((resolve, reject) => {
+        const child = spawn("node", ["--version"], {
+          env: process.env,
+          shell: false
+        });
+        let output = "";
+        child.stdout.on("data", (data) => output += data);
+        child.on("close", (code) => {
+          results.spawnTests.push({
+            method: "spawn('node', ['--version'])",
+            success: code === 0,
+            output: output.trim(),
+            code
+          });
+          resolve(null);
+        });
+        child.on("error", (err) => {
+          results.spawnTests.push({
+            method: "spawn('node', ['--version'])",
+            success: false,
+            error: err.message
+          });
+          resolve(null);
+        });
+      });
+    } catch (err) {
+      results.spawnTests.push({
+        method: "spawn('node', ['--version'])",
+        success: false,
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+
+    // Test 2: Spawn with process.execPath
+    try {
+      await new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, ["--version"], {
+          env: process.env,
+          shell: false
+        });
+        let output = "";
+        child.stdout.on("data", (data) => output += data);
+        child.on("close", (code) => {
+          results.spawnTests.push({
+            method: `spawn(process.execPath, ['--version'])`,
+            success: code === 0,
+            output: output.trim(),
+            code,
+            execPath: process.execPath
+          });
+          resolve(null);
+        });
+        child.on("error", (err) => {
+          results.spawnTests.push({
+            method: `spawn(process.execPath, ['--version'])`,
+            success: false,
+            error: err.message,
+            execPath: process.execPath
+          });
+          resolve(null);
+        });
+      });
+    } catch (err) {
+      results.spawnTests.push({
+        method: `spawn(process.execPath, ['--version'])`,
+        success: false,
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+
+    // Test 3: Spawn with shell: true
+    try {
+      await new Promise((resolve, reject) => {
+        const child = spawn("node", ["--version"], {
+          env: process.env,
+          shell: true
+        });
+        let output = "";
+        child.stdout.on("data", (data) => output += data);
+        child.on("close", (code) => {
+          results.spawnTests.push({
+            method: "spawn('node', ['--version'], {shell: true})",
+            success: code === 0,
+            output: output.trim(),
+            code
+          });
+          resolve(null);
+        });
+        child.on("error", (err) => {
+          results.spawnTests.push({
+            method: "spawn('node', ['--version'], {shell: true})",
+            success: false,
+            error: err.message
+          });
+          resolve(null);
+        });
+      });
+    } catch (err) {
+      results.spawnTests.push({
+        method: "spawn('node', ['--version'], {shell: true})",
+        success: false,
+        error: err instanceof Error ? err.message : String(err)
+      });
+    }
+
+    return c.json(results);
+  });
+
   /**
    * @swagger
    * /api/projects:
