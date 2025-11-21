@@ -85,8 +85,14 @@ export async function prepareClaudeAuthEnvironment(): Promise<{
   };
 
   // Add NODE_OPTIONS to include the preload script
-  const nodeOptions = `--require "${preloadScriptPath.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+  // IMPORTANT: Use absolute path! The working directory might be different when spawning
+  const absolutePreloadPath = path.isAbsolute(preloadScriptPath)
+    ? preloadScriptPath
+    : path.resolve(process.cwd(), preloadScriptPath);
+  const nodeOptions = `--require "${absolutePreloadPath.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
   authEnv.NODE_OPTIONS = nodeOptions;
+
+  console.log(`[AUTH] Using absolute preload path: ${absolutePreloadPath}`);
 
   // Add Claude configuration directories
   authEnv.CLAUDE_CONFIG_DIR = path.join(process.env.HOME || process.cwd(), ".claude-config");
