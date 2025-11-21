@@ -544,9 +544,19 @@ async function* executeClaudeCommand(
       delete process.env.ANTHROPIC_API_KEY;
       delete process.env.CLAUDE_API_KEY;
 
-      if (debugMode) {
-        console.log("[DEBUG] Set CLAUDE_CODE_OAUTH_TOKEN and cleared API key env vars");
-        console.log("[DEBUG] OAuth token length:", claudeAuth.accessToken.length);
+      console.error("[DEBUG-FORCE] Using OAuth authentication");
+    } else {
+      // No OAuth - ensure API key is set for Claude CLI
+      const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
+      if (apiKey) {
+        // Ensure both env vars are set for maximum compatibility
+        originalEnv.ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+        originalEnv.CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
+        process.env.ANTHROPIC_API_KEY = apiKey;
+        process.env.CLAUDE_API_KEY = apiKey;
+        console.error("[DEBUG-FORCE] Using API key authentication (key set in env)");
+      } else {
+        console.error("[DEBUG-FORCE] WARNING: No authentication available!");
       }
     }
 
