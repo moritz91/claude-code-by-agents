@@ -594,6 +594,13 @@ async function* executeClaudeCommand(
         }
       }
 
+      // Check if API key is available for Claude CLI
+      const apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY;
+      console.error(`[DEBUG-FORCE]   ANTHROPIC_API_KEY available: ${!!apiKey}`);
+      if (!apiKey) {
+        console.error(`[DEBUG-FORCE]   WARNING: No API key found! Claude CLI will fail without auth.`);
+      }
+
       console.error(`[DEBUG-FORCE] Calling SDK query() now...`);
 
       for await (const sdkMessage of query({
@@ -641,13 +648,21 @@ async function* executeClaudeCommand(
       if (debugMode) {
         console.error("Claude Code execution failed:", error);
       }
-      
+
+
+      console.error(`[DEBUG-FORCE] Claude Code execution error:`, error);
+      console.error(`[DEBUG-FORCE] Error type:`, error instanceof Error ? error.constructor.name : typeof error);
+      if (error instanceof Error) {
+        console.error(`[DEBUG-FORCE] Error message:`, error.message);
+        console.error(`[DEBUG-FORCE] Error stack:`, error.stack);
+      }
+
       // Provide more specific error messages for authentication issues
       let errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes("exit with code 1") || errorMessage.includes("authentication")) {
         errorMessage = `Claude Code authentication failed. Please ensure valid OAuth credentials are provided. Original error: ${errorMessage}`;
       }
-      
+
       yield {
         type: "error",
         error: errorMessage,
