@@ -613,6 +613,30 @@ async function* executeClaudeCommand(
 
       console.error(`[DEBUG-FORCE] Calling SDK query() now...`);
 
+      // Try to capture stderr from Claude CLI by running it directly first as a test
+      try {
+        const { spawn } = await import('node:child_process');
+        const testProc = spawn('node', [claudePath, '--version'], {
+          cwd: workingDirectory,
+          env: process.env,
+        });
+        let stderr = '';
+        let stdout = '';
+        testProc.stderr?.on('data', (data) => stderr += data);
+        testProc.stdout?.on('data', (data) => stdout += data);
+        await new Promise((resolve) => {
+          testProc.on('close', (code) => {
+            console.error(`[DEBUG-FORCE] Claude CLI test run:`);
+            console.error(`[DEBUG-FORCE]   Exit code: ${code}`);
+            console.error(`[DEBUG-FORCE]   Stdout: ${stdout}`);
+            console.error(`[DEBUG-FORCE]   Stderr: ${stderr}`);
+            resolve(null);
+          });
+        });
+      } catch (testErr) {
+        console.error(`[DEBUG-FORCE] Claude CLI test failed:`, testErr);
+      }
+
       for await (const sdkMessage of query({
         prompt: processedMessage,
         options: {
