@@ -711,8 +711,17 @@ export async function handleChatRequest(
 
         // Check if this should use orchestrator mode
         let executionMethod;
-        
-        if (shouldUseOrchestrator(chatRequest.message, chatRequest.availableAgents)) {
+
+        const useOrchestrator = shouldUseOrchestrator(chatRequest.message, chatRequest.availableAgents);
+
+        if (debugMode) {
+          console.log(`[DEBUG] ========== ROUTING DECISION ==========`);
+          console.log(`[DEBUG] useOrchestrator result: ${useOrchestrator}`);
+          console.log(`[DEBUG] message: ${chatRequest.message}`);
+          console.log(`[DEBUG] availableAgents: ${JSON.stringify(chatRequest.availableAgents?.map(a => a.id))}`);
+        }
+
+        if (useOrchestrator) {
           // Check if message mentions only one specific agent
           const mentionMatches = chatRequest.message.match(/@(\w+(?:-\w+)*)/g);
           if (mentionMatches && mentionMatches.length === 1 && chatRequest.availableAgents) {
