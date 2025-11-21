@@ -577,6 +577,23 @@ async function* executeClaudeCommand(
         console.error(`[DEBUG-FORCE]   ERROR accessing claudePath:`, err);
       }
 
+      // Ensure working directory exists before spawning
+      if (workingDirectory) {
+        const fs = await import('node:fs');
+        try {
+          const stats = fs.statSync(workingDirectory);
+          console.error(`[DEBUG-FORCE]   workingDirectory exists: ${stats.isDirectory()}`);
+        } catch (err) {
+          console.error(`[DEBUG-FORCE]   workingDirectory DOES NOT EXIST, creating it...`);
+          try {
+            fs.mkdirSync(workingDirectory, { recursive: true });
+            console.error(`[DEBUG-FORCE]   workingDirectory created successfully`);
+          } catch (mkdirErr) {
+            console.error(`[DEBUG-FORCE]   ERROR creating workingDirectory:`, mkdirErr);
+          }
+        }
+      }
+
       console.error(`[DEBUG-FORCE] Calling SDK query() now...`);
 
       for await (const sdkMessage of query({
