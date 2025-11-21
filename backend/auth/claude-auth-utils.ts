@@ -56,11 +56,23 @@ export async function prepareClaudeAuthEnvironment(): Promise<{
     };
   }
 
-  // Get the preload script path - it should be relative to the backend directory
-  const preloadScriptPath = path.resolve(
+  // Get the preload script path
+  // In production (bundled), look in dist/auth relative to cwd
+  // In development, look relative to this file's directory
+  let preloadScriptPath = path.resolve(
     __dirname,
     "./preload-script.cjs"
   );
+
+  // Check if that path exists, if not try dist/auth
+  const fs = await import("fs");
+  if (!fs.existsSync(preloadScriptPath)) {
+    const distPath = path.join(process.cwd(), "dist/auth/preload-script.cjs");
+    if (fs.existsSync(distPath)) {
+      preloadScriptPath = distPath;
+      console.log(`[AUTH] Using preload script from dist: ${distPath}`);
+    }
+  }
 
   // Use the same credentials path
 
@@ -84,9 +96,8 @@ export async function prepareClaudeAuthEnvironment(): Promise<{
   console.log(`[AUTH] Preload script: ${preloadScriptPath}`);
   console.log(`[AUTH] Credentials path: ${credentialsPath}`);
   console.log(`[AUTH] NODE_OPTIONS: ${nodeOptions}`);
-  
+
   // Verify preload script exists
-  const fs = await import("fs");
   if (!fs.existsSync(preloadScriptPath)) {
     console.error(`[AUTH] ERROR: Preload script not found at ${preloadScriptPath}`);
     console.error(`[AUTH] __dirname is: ${__dirname}`);
