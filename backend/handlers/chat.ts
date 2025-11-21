@@ -479,13 +479,11 @@ async function* executeClaudeCommand(
   claudeAuth?: ChatRequest['claudeAuth'],
   debugMode?: boolean,
 ): AsyncGenerator<StreamResponse> {
-  if (debugMode) {
-    console.log(`[DEBUG] ========== executeClaudeCommand CALLED ==========`);
-    console.log(`[DEBUG] message: ${message.substring(0, 50)}`);
-    console.log(`[DEBUG] claudePath: ${claudePath}`);
-    console.log(`[DEBUG] workingDirectory: ${workingDirectory}`);
-    console.log(`[DEBUG] sessionId: ${sessionId}`);
-  }
+  console.error(`[DEBUG-FORCE] ========== executeClaudeCommand CALLED ==========`);
+  console.error(`[DEBUG-FORCE] message: ${message.substring(0, 50)}`);
+  console.error(`[DEBUG-FORCE] claudePath: ${claudePath}`);
+  console.error(`[DEBUG-FORCE] workingDirectory: ${workingDirectory}`);
+  console.error(`[DEBUG-FORCE] sessionId: ${sessionId}`);
 
   let abortController: AbortController;
 
@@ -558,28 +556,28 @@ async function* executeClaudeCommand(
     }
 
     try {
-      if (debugMode) {
-        console.log(`[DEBUG] About to spawn Claude Code SDK with:`);
-        console.log(`[DEBUG]   executable: "node"`);
-        console.log(`[DEBUG]   executableArgs:`, executableArgs);
-        console.log(`[DEBUG]   claudePath: ${claudePath}`);
-        console.log(`[DEBUG]   workingDirectory: ${workingDirectory || process.cwd()}`);
-        console.log(`[DEBUG]   PATH: ${process.env.PATH?.substring(0, 200)}...`);
-        console.log(`[DEBUG]   process.execPath: ${process.execPath}`);
+      console.error(`[DEBUG-FORCE] About to spawn Claude Code SDK with:`);
+      console.error(`[DEBUG-FORCE]   executable: "node"`);
+      console.error(`[DEBUG-FORCE]   executableArgs:`, executableArgs);
+      console.error(`[DEBUG-FORCE]   claudePath: ${claudePath}`);
+      console.error(`[DEBUG-FORCE]   workingDirectory: ${workingDirectory || process.cwd()}`);
+      console.error(`[DEBUG-FORCE]   PATH: ${process.env.PATH?.substring(0, 200)}...`);
+      console.error(`[DEBUG-FORCE]   process.execPath: ${process.execPath}`);
 
-        // Test if we can access the Claude CLI file
-        const fs = await import('node:fs');
-        try {
-          const stats = fs.statSync(claudePath);
-          console.log(`[DEBUG]   claudePath exists: ${stats.isFile() || stats.isSymbolicLink()}`);
-          if (stats.isSymbolicLink()) {
-            const realPath = fs.realpathSync(claudePath);
-            console.log(`[DEBUG]   claudePath is symlink to: ${realPath}`);
-          }
-        } catch (err) {
-          console.log(`[DEBUG]   ERROR accessing claudePath:`, err);
+      // Test if we can access the Claude CLI file
+      const fs = await import('node:fs');
+      try {
+        const stats = fs.statSync(claudePath);
+        console.error(`[DEBUG-FORCE]   claudePath exists: ${stats.isFile() || stats.isSymbolicLink()}`);
+        if (stats.isSymbolicLink()) {
+          const realPath = fs.realpathSync(claudePath);
+          console.error(`[DEBUG-FORCE]   claudePath is symlink to: ${realPath}`);
         }
+      } catch (err) {
+        console.error(`[DEBUG-FORCE]   ERROR accessing claudePath:`, err);
       }
+
+      console.error(`[DEBUG-FORCE] Calling SDK query() now...`);
 
       for await (const sdkMessage of query({
         prompt: processedMessage,
@@ -776,10 +774,8 @@ export async function handleChatRequest(
           }
         } else {
           // Not orchestrator - use local Claude execution
-          if (debugMode) {
-            console.log(`[DEBUG] Using local Claude execution path`);
-            console.log(`[DEBUG] claudePath from config: ${claudePath}`);
-          }
+          console.error(`[DEBUG-FORCE] Using local Claude execution path`);
+          console.error(`[DEBUG-FORCE] claudePath from config: ${claudePath}`);
 
           executionMethod = executeClaudeCommand(
             chatRequest.message,
@@ -792,6 +788,8 @@ export async function handleChatRequest(
             chatRequest.claudeAuth,
             debugMode,
           );
+
+          console.error(`[DEBUG-FORCE] executeClaudeCommand generator created`);
         }
 
         for await (const chunk of executionMethod) {
