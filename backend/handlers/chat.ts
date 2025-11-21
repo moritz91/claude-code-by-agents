@@ -616,6 +616,8 @@ async function* executeClaudeCommand(
       // Try to capture stderr from Claude CLI by running it directly first as a test
       try {
         const { spawn } = await import('node:child_process');
+
+        // Test 1: --version (should work)
         const testProc = spawn('node', [claudePath, '--version'], {
           cwd: workingDirectory,
           env: process.env,
@@ -626,10 +628,37 @@ async function* executeClaudeCommand(
         testProc.stdout?.on('data', (data) => stdout += data);
         await new Promise((resolve) => {
           testProc.on('close', (code) => {
-            console.error(`[DEBUG-FORCE] Claude CLI test run:`);
+            console.error(`[DEBUG-FORCE] Claude CLI --version test:`);
             console.error(`[DEBUG-FORCE]   Exit code: ${code}`);
             console.error(`[DEBUG-FORCE]   Stdout: ${stdout}`);
             console.error(`[DEBUG-FORCE]   Stderr: ${stderr}`);
+            resolve(null);
+          });
+        });
+
+        // Test 2: simple query with --print
+        const queryProc = spawn('node', [claudePath, '--print', 'hello'], {
+          cwd: workingDirectory,
+          env: process.env,
+        });
+        let queryStderr = '';
+        let queryStdout = '';
+        queryProc.stderr?.on('data', (data) => queryStderr += data);
+        queryProc.stdout?.on('data', (data) => queryStdout += data);
+
+        // Add timeout
+        const timeout = setTimeout(() => {
+          console.error(`[DEBUG-FORCE] Claude CLI query test: TIMEOUT after 10s, killing process`);
+          queryProc.kill();
+        }, 10000);
+
+        await new Promise((resolve) => {
+          queryProc.on('close', (code) => {
+            clearTimeout(timeout);
+            console.error(`[DEBUG-FORCE] Claude CLI query test (--print hello):`);
+            console.error(`[DEBUG-FORCE]   Exit code: ${code}`);
+            console.error(`[DEBUG-FORCE]   Stdout: ${queryStdout.substring(0, 200)}`);
+            console.error(`[DEBUG-FORCE]   Stderr: ${queryStderr.substring(0, 500)}`);
             resolve(null);
           });
         });
