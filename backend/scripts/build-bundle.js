@@ -28,9 +28,10 @@ await build({
     "openai",
     "node-fetch",
     "formdata-node",
-    "abort-controller", 
+    "abort-controller",
     "form-data-encoder",
     "formdata-node/file-from-path",
+    "agentkeepalive",
   ],
   sourcemap: true,
 });

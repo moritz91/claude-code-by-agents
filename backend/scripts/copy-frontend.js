@@ -21,9 +21,9 @@ const backendStaticPath = join(__dirname, "../dist/static");
 
 // Check if frontend build exists
 if (!existsSync(frontendDistPath)) {
-  console.error("❌ Frontend build not found at:", frontendDistPath);
-  console.error("   Please run 'cd ../frontend && npm run build' first");
-  process.exit(1);
+  console.warn("⚠️  Frontend build not found at:", frontendDistPath);
+  console.warn("   Skipping frontend copy (OK for Render deployment where frontend is separate)");
+  process.exit(0); // Exit successfully
 }
 
 // Ensure target directory exists
