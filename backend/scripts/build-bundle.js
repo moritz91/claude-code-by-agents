@@ -32,6 +32,8 @@ await build({
     "form-data-encoder",
     "formdata-node/file-from-path",
     "agentkeepalive",
+    "swagger-jsdoc",
+    "swagger-ui-express",
   ],
   sourcemap: true,
 });
