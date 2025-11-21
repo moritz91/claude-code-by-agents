@@ -550,6 +550,29 @@ async function* executeClaudeCommand(
     }
 
     try {
+      if (debugMode) {
+        console.log(`[DEBUG] About to spawn Claude Code SDK with:`);
+        console.log(`[DEBUG]   executable: "node"`);
+        console.log(`[DEBUG]   executableArgs:`, executableArgs);
+        console.log(`[DEBUG]   claudePath: ${claudePath}`);
+        console.log(`[DEBUG]   workingDirectory: ${workingDirectory || process.cwd()}`);
+        console.log(`[DEBUG]   PATH: ${process.env.PATH?.substring(0, 200)}...`);
+        console.log(`[DEBUG]   process.execPath: ${process.execPath}`);
+
+        // Test if we can access the Claude CLI file
+        const fs = await import('node:fs');
+        try {
+          const stats = fs.statSync(claudePath);
+          console.log(`[DEBUG]   claudePath exists: ${stats.isFile() || stats.isSymbolicLink()}`);
+          if (stats.isSymbolicLink()) {
+            const realPath = fs.realpathSync(claudePath);
+            console.log(`[DEBUG]   claudePath is symlink to: ${realPath}`);
+          }
+        } catch (err) {
+          console.log(`[DEBUG]   ERROR accessing claudePath:`, err);
+        }
+      }
+
       for await (const sdkMessage of query({
         prompt: processedMessage,
         options: {
