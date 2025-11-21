@@ -637,7 +637,8 @@ async function* executeClaudeCommand(
         });
 
         // Test 2: simple query with --print
-        const queryProc = spawn('node', [claudePath, '--print', 'hello'], {
+        // Pass prompt via stdin and close it
+        const queryProc = spawn('node', [claudePath, '--print'], {
           cwd: workingDirectory,
           env: process.env,
         });
@@ -645,6 +646,12 @@ async function* executeClaudeCommand(
         let queryStdout = '';
         queryProc.stderr?.on('data', (data) => queryStderr += data);
         queryProc.stdout?.on('data', (data) => queryStdout += data);
+
+        // Write prompt to stdin and close it
+        if (queryProc.stdin) {
+          queryProc.stdin.write('hello\n');
+          queryProc.stdin.end();
+        }
 
         // Add timeout
         const timeout = setTimeout(() => {
@@ -655,7 +662,7 @@ async function* executeClaudeCommand(
         await new Promise((resolve) => {
           queryProc.on('close', (code) => {
             clearTimeout(timeout);
-            console.error(`[DEBUG-FORCE] Claude CLI query test (--print hello):`);
+            console.error(`[DEBUG-FORCE] Claude CLI query test (--print with stdin):`);
             console.error(`[DEBUG-FORCE]   Exit code: ${code}`);
             console.error(`[DEBUG-FORCE]   Stdout: ${queryStdout.substring(0, 200)}`);
             console.error(`[DEBUG-FORCE]   Stderr: ${queryStderr.substring(0, 500)}`);
