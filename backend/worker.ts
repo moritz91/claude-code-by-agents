@@ -9,12 +9,18 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createMiddleware } from "hono/factory";
-import { globalRegistry } from "./providers/registry.ts";
+import { WorkersProviderRegistry } from "./providers/workers-registry.ts";
 import { globalImageHandler } from "./utils/imageHandling.ts";
-import { handleChatRequest } from "./handlers/chat.ts";
-import { handleMultiAgentChatRequest } from "./handlers/multiAgentChat.ts";
+import { handleChatRequest } from "./handlers/workers-chat.ts";
+import { handleMultiAgentChatRequest } from "./handlers/workers-multi-agent.ts";
 import { handleAbortRequest } from "./handlers/abort.ts";
 import type { AppConfig } from "./types.ts";
+
+// Create Workers-specific registry instance (no Claude Code provider)
+const workersRegistry = new WorkersProviderRegistry();
+
+// Export for handlers to use - they expect "globalRegistry"
+export { workersRegistry as globalRegistry };
 
 // Store AbortControllers for each request
 const requestAbortControllers = new Map<string, AbortController>();
@@ -146,35 +152,46 @@ app.all("*", (c) => {
   );
 });
 
+/**
+ * Initialize Workers-specific provider registry
+ * Only includes API-based providers (no local Claude Code)
+ */
+function initializeWorkersRegistry(env: Env): void {
+  if (workersRegistry.isInitialized()) {
+    return;
+  }
+
+  try {
+    // Initialize providers with API keys
+    workersRegistry.initializeProviders({
+      openaiApiKey: env.OPENAI_API_KEY,
+      anthropicApiKey: env.ANTHROPIC_API_KEY,
+    });
+
+    // Create default agents
+    workersRegistry.createDefaultAgents();
+
+    console.log("[Workers] Initialized with agents:",
+      workersRegistry.getAllAgents().map(a => ({ id: a.id, provider: a.provider }))
+    );
+
+    workersRegistry.markAsInitialized();
+  } catch (error) {
+    console.error("[Workers] Failed to initialize:", error);
+  }
+}
+
 // Workers export
 export default {
-  async fetch(request: Request, env: any, ctx: any): Promise<Response> {
-    // Initialize multi-agent system on first request
-    if (!globalRegistry.isInitialized()) {
-      try {
-        // Initialize image handler
-        await globalImageHandler.initialize().catch(error => {
-          console.warn("Failed to initialize image handler:", error);
-        });
+  async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
+    // Initialize on first request
+    initializeWorkersRegistry(env);
 
-        // Initialize providers with environment variables
-        globalRegistry.initializeDefaultProviders({
-          openaiApiKey: env.OPENAI_API_KEY,
-          anthropicApiKey: env.ANTHROPIC_API_KEY,
-          claudePath: null, // No local Claude CLI in Workers
-        });
-
-        // Create default agents
-        globalRegistry.createDefaultAgents();
-
-        console.log("[Workers] Initialized with agents:",
-          globalRegistry.getAllAgents().map(a => ({ id: a.id, provider: a.provider }))
-        );
-
-        globalRegistry.markAsInitialized();
-      } catch (error) {
-        console.error("[Workers] Failed to initialize:", error);
-      }
+    // Initialize image handler
+    if (env.OPENAI_API_KEY) {
+      await globalImageHandler.initialize().catch(error => {
+        console.warn("Failed to initialize image handler:", error);
+      });
     }
 
     // Store env in request for handlers
