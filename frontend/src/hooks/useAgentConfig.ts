@@ -21,7 +21,7 @@ const DEFAULT_AGENTS: Agent[] = [
     workingDirectory: "/tmp/orchestrator",
     color: "bg-gradient-to-r from-blue-500 to-purple-500",
     description: "Intelligent orchestrator that coordinates multi-agent workflows",
-    apiEndpoint: "https://api.claudecode.run",
+    apiEndpoint: "https://agentrooms-api.onrender.com",
     isOrchestrator: true
   }
 ];
