@@ -550,11 +550,20 @@ async function* executeClaudeCommand(
     }
 
     try {
+      // Use full path to node executable instead of "node" string
+      // This prevents "spawn node ENOENT" errors in cloud environments where
+      // node might not be in PATH during child_process.spawn
+      const nodeExecutable = process.execPath; // e.g., /usr/bin/node or /opt/render/.../node
+
+      if (debugMode) {
+        console.log(`[DEBUG] Using node executable: ${nodeExecutable}`);
+      }
+
       for await (const sdkMessage of query({
         prompt: processedMessage,
         options: {
           abortController,
-          executable: "node" as const,
+          executable: nodeExecutable,
           executableArgs: executableArgs,
           pathToClaudeCodeExecutable: claudePath,
           ...(sessionId ? { resume: sessionId } : {}),
