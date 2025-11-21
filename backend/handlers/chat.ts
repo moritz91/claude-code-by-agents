@@ -544,30 +544,12 @@ async function* executeClaudeCommand(
       }
     }
 
-    // Ensure node is in PATH for child process spawning
-    // Add the directory containing node to PATH if it's not already there
-    const nodeDir = process.execPath.substring(0, process.execPath.lastIndexOf('/'));
-    const currentPath = process.env.PATH || '';
-    if (!currentPath.includes(nodeDir)) {
-      originalEnv.PATH = process.env.PATH;
-      process.env.PATH = `${nodeDir}:${currentPath}`;
-
-      if (debugMode) {
-        console.log(`[DEBUG] Added ${nodeDir} to PATH`);
-      }
-    }
-
     for (const [key, value] of Object.entries(authEnv)) {
       originalEnv[key] = process.env[key];
       process.env[key] = value;
     }
 
     try {
-      if (debugMode) {
-        console.log(`[DEBUG] Using node executable from PATH`);
-        console.log(`[DEBUG] PATH includes: ${process.env.PATH}`);
-      }
-
       for await (const sdkMessage of query({
         prompt: processedMessage,
         options: {

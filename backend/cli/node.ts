@@ -17,6 +17,14 @@ async function main(runtime: NodeRuntime) {
   // Parse CLI arguments
   const args = parseCliArgs(runtime);
 
+  // Ensure node is in PATH for child process spawning (fixes Render deployment)
+  // Add node's directory to PATH at startup before any SDK code runs
+  const nodeDir = process.execPath.substring(0, process.execPath.lastIndexOf('/'));
+  if (!process.env.PATH?.includes(nodeDir)) {
+    process.env.PATH = `${nodeDir}:${process.env.PATH || ''}`;
+    console.log(`📍 Added node directory to PATH: ${nodeDir}`);
+  }
+
   // Validate Claude CLI availability and get the validated path
   const validatedClaudePath = await validateClaudeCli(runtime, args.claudePath);
 
