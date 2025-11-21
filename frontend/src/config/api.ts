@@ -20,8 +20,8 @@ export const getApiUrl = (endpoint: string, orchestratorEndpoint?: string) => {
     return endpoint; // Use Vite proxy
   }
   
-  // Use orchestrator endpoint if provided, otherwise fallback to default
-  const baseUrl = orchestratorEndpoint || "https://api.claudecode.run";
+  // Use orchestrator endpoint if provided, otherwise fallback to Render backend
+  const baseUrl = orchestratorEndpoint || "https://agentrooms-api.onrender.com";
   return `${baseUrl}${endpoint}`;
 };
 
